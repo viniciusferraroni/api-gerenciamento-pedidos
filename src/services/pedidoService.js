@@ -12,6 +12,13 @@ const pedidos = [
 const STATUS_VALIDOS = ['recebido', 'em_preparacao', 'enviado', 'entregue', 'cancelado'];
 const PRIORIDADES_VALIDAS = ['normal', 'alta', 'urgente'];
 const TIPOS_VALIDOS = ['entrega', 'retirada'];
+const TRANSICOES_STATUS = {
+  recebido: ['em_preparacao', 'cancelado'],
+  em_preparacao: ['enviado', 'cancelado'],
+  enviado: ['entregue'],
+  entregue: [],
+  cancelado: []
+};
 let nextId = 2;
 
 function validarNovoPedido(body) {
@@ -41,6 +48,14 @@ function validarNovoPedido(body) {
 function validarStatus(status) {
   if (typeof status !== 'string' || !STATUS_VALIDOS.includes(status.trim().toLowerCase())) {
     return `status inválido. Valores permitidos: ${STATUS_VALIDOS.join(', ')}.`;
+  }
+
+  return null;
+}
+
+function validarTransicaoStatus(statusAtual, proximoStatus) {
+  if (!TRANSICOES_STATUS[statusAtual].includes(proximoStatus.trim().toLowerCase())) {
+    return `Não é permitido alterar o status de ${statusAtual} para ${proximoStatus}.`;
   }
 
   return null;
@@ -86,6 +101,7 @@ function atualizarStatus(pedido, status) {
 module.exports = {
   validarNovoPedido,
   validarStatus,
+  validarTransicaoStatus,
   listarPedidos,
   buscarPedidoPorId,
   criarPedido,

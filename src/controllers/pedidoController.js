@@ -42,6 +42,11 @@ function atualizarStatus(req, res) {
     return res.status(400).json({ message: validationError });
   }
 
+  const transitionError = pedidoService.validarTransicaoStatus(pedido.status, status);
+  if (transitionError) {
+    return res.status(400).json({ message: transitionError });
+  }
+
   return res.status(200).json(pedidoService.atualizarStatus(pedido, status));
 }
 
