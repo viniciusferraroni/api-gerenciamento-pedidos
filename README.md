@@ -126,4 +126,4 @@ As rotas encaminham as requisições aos controllers, que cuidam das respostas H
 
 ## Uso de inteligência artificial
 
-A IA auxiliou no desenvolvimento e na documentação do projeto, além das operações de commit e push.
+Foi usado GitCopilot para auxiliar no desenvolvimento do projeto, além das operações de commit e push.
