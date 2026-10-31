@@ -11,6 +11,7 @@ const pedidos = [
 
 const STATUS_VALIDOS = ['recebido', 'em_preparacao', 'enviado', 'entregue', 'cancelado'];
 const PRIORIDADES_VALIDAS = ['normal', 'alta', 'urgente'];
+const TIPOS_VALIDOS = ['entrega', 'retirada'];
 let nextId = 2;
 
 function validarNovoPedido(body) {
@@ -22,15 +23,15 @@ function validarNovoPedido(body) {
     return 'cliente é obrigatório.';
   }
 
-  if (typeof body.tipo !== 'string' || body.tipo.trim() === '') {
-    return 'tipo é obrigatório.';
+  if (typeof body.tipo !== 'string' || !TIPOS_VALIDOS.includes(body.tipo.trim().toLowerCase())) {
+    return `tipo deve ser um dos valores: ${TIPOS_VALIDOS.join(' ou ')}.`;
   }
 
-  if (typeof body.valor !== 'number' || Number.isNaN(body.valor) || body.valor <= 0) {
+  if (typeof body.valor !== 'number' || !Number.isFinite(body.valor) || body.valor <= 0) {
     return 'valor deve ser numérico e maior que zero.';
   }
 
-  if (typeof body.prioridade !== 'string' || !PRIORIDADES_VALIDAS.includes(body.prioridade.toLowerCase())) {
+  if (typeof body.prioridade !== 'string' || !PRIORIDADES_VALIDAS.includes(body.prioridade.trim().toLowerCase())) {
     return 'prioridade deve ser um dos valores: normal, alta ou urgente.';
   }
 
@@ -38,7 +39,7 @@ function validarNovoPedido(body) {
 }
 
 function validarStatus(status) {
-  if (typeof status !== 'string' || !STATUS_VALIDOS.includes(status.toLowerCase())) {
+  if (typeof status !== 'string' || !STATUS_VALIDOS.includes(status.trim().toLowerCase())) {
     return `status inválido. Valores permitidos: ${STATUS_VALIDOS.join(', ')}.`;
   }
 
@@ -50,16 +51,25 @@ function listarPedidos() {
 }
 
 function buscarPedidoPorId(id) {
-  return pedidos.find((pedido) => pedido.id === Number(id));
+  if (typeof id !== 'string' || !/^[1-9]\d*$/.test(id)) {
+    return undefined;
+  }
+
+  const pedidoId = Number(id);
+  if (!Number.isSafeInteger(pedidoId)) {
+    return undefined;
+  }
+
+  return pedidos.find((pedido) => pedido.id === pedidoId);
 }
 
 function criarPedido(dados) {
   const pedido = {
     id: nextId,
     cliente: dados.cliente.trim(),
-    tipo: dados.tipo.trim(),
+    tipo: dados.tipo.trim().toLowerCase(),
     valor: dados.valor,
-    prioridade: dados.prioridade.toLowerCase(),
+    prioridade: dados.prioridade.trim().toLowerCase(),
     status: 'recebido'
   };
 
@@ -69,7 +79,7 @@ function criarPedido(dados) {
 }
 
 function atualizarStatus(pedido, status) {
-  pedido.status = status.toLowerCase();
+  pedido.status = status.trim().toLowerCase();
   return pedido;
 }
 

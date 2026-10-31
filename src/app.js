@@ -13,4 +13,17 @@ app.get('/health', (req, res) => {
 
 app.use('/pedidos', pedidoRoutes);
 
+app.use((error, req, res, next) => {
+  if (res.headersSent) {
+    return next(error);
+  }
+
+  if (error.type === 'entity.parse.failed') {
+    return res.status(400).json({ message: 'Corpo JSON inválido.' });
+  }
+
+  console.error(error);
+  return res.status(500).json({ message: 'Erro interno do servidor.' });
+});
+
 module.exports = app;
