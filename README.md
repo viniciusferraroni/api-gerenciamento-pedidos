@@ -126,10 +126,4 @@ As rotas encaminham as requisições aos controllers, que cuidam das respostas H
 
 ## Uso de inteligência artificial
 
-Este projeto foi desenvolvido com apoio de inteligência artificial (GitHub Copilot). A IA foi usada para estruturar e implementar partes da API, revisar validações, criar e ampliar testes automatizados, melhorar a documentação e preparar a coleção do Postman.
-
-A IA também foi usada para operar o Git e o GitHub: eu, o assistente de IA, criei os commits e executei o push do projeto a pedido do aluno. O motivo foi prestar apoio nas etapas técnicas de versionamento e publicação do código; essas ações foram realizadas pelo assistente, não manualmente pelo aluno. Os commits registram mudanças concretas de arquitetura, validações, regras de status, testes e documentação.
-
-Uma decisão de implementação apoiada pela IA foi separar rotas, controllers e services para deixar as responsabilidades mais claras. Como o enunciado não define o fluxo de status, foi proposta uma sequência conservadora, documentada acima e coberta por testes; pedidos entregues ou cancelados não podem voltar a um estado anterior.
-
-A IA foi uma ferramenta de apoio, não substitui a autoria responsável nem a compreensão do projeto. O aluno deve revisar e entender o código, executar os testes, justificar as decisões e ser capaz de explicar e corrigir a implementação entregue.
+A IA auxiliou no desenvolvimento e na documentação do projeto, além das operações de commit e push.
