@@ -1,7 +1,6 @@
 # API de Gerenciamento de Pedidos
 
-Estrutura inicial de uma API REST em Node.js e Express, organizada em rotas,
-controllers e services.
+API REST em Node.js e Express, organizada em rotas, controllers e services.
 
 ## Instalação e execução
 
@@ -13,24 +12,45 @@ npm start
 Por padrão, a API inicia em `http://localhost:3000`. A porta pode ser alterada
 pela variável de ambiente `PORT`.
 
-## Rotas previstas
+## Rotas
 
 | Método | Caminho | Responsabilidade |
 | --- | --- | --- |
-| `POST` | `/pedidos` | Encaminhar a criação de um pedido |
+| `POST` | `/pedidos` | Cadastrar um pedido válido (HTTP 201) |
 | `GET` | `/pedidos` | Encaminhar a listagem de pedidos |
 | `GET` | `/pedidos/:id` | Encaminhar a consulta de um pedido |
 | `PATCH` | `/pedidos/:id/status` | Encaminhar a atualização de status |
 
-As rotas já são encaminhadas pelos controllers para os métodos correspondentes
-do service. Esses métodos ainda são stubs e respondem com HTTP 501; cadastro,
-consultas, atualização e validações ainda precisam ser implementados.
+### Cadastrar pedido
 
-Quando implementados, os métodos do service devem receber os dados do pedido,
-nenhum argumento para listar, o identificador para consultar e identificador
-mais status para atualizar. A consulta e a atualização devem retornar `null`
-quando o pedido não existir, permitindo ao controller responder HTTP 404.
+`POST /pedidos` recebe um JSON com `cliente`, `tipo`, `valor` e `prioridade`:
 
-O middleware da aplicação responde em JSON para rotas inexistentes e erros.
-Dados inválidos devem ser tratados pela implementação do service com erro
-`statusCode` 400 e uma mensagem explicativa.
+```json
+{
+  "cliente": "Carlos Silva",
+  "tipo": "entrega",
+  "valor": 35,
+  "prioridade": "normal"
+}
+```
+
+`cliente` deve ser texto não vazio após remover espaços das extremidades.
+`valor` deve ser um número finito maior que zero. Os tipos aceitos são
+`entrega` e `retirada`; as prioridades aceitas são `normal`, `alta` e `urgente`.
+Tipo e prioridade ignoram espaços externos e diferenças entre maiúsculas e
+minúsculas, e são gravados em letras minúsculas. O cliente também é gravado sem
+espaços externos. O pedido criado recebe um identificador sequencial e começa
+com status `recebido`.
+
+Dados inválidos respondem HTTP 400 com JSON no formato
+`{ "mensagem": "..." }`. Os demais métodos do service ainda respondem HTTP 501
+até serem implementados.
+
+## Testes
+
+Execute `npm test` para verificar o cadastro, as normalizações e as validações.
+
+Os métodos de listagem, consulta e atualização ainda são stubs. Quando
+implementados, a consulta e a atualização devem retornar `null` quando o
+pedido não existir, permitindo ao controller responder HTTP 404. O middleware
+da aplicação responde em JSON para rotas inexistentes e erros.
