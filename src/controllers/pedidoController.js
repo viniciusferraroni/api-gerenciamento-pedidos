@@ -1,7 +1,17 @@
 const pedidoService = require('../services/pedidoService');
 
 function listar(req, res) {
-  return res.status(200).json(pedidoService.listarPedidos());
+  const filtros = {
+    status: req.query.status,
+    prioridade: req.query.prioridade
+  };
+  const validationError = pedidoService.validarFiltrosLista(filtros);
+
+  if (validationError) {
+    return res.status(400).json({ message: validationError });
+  }
+
+  return res.status(200).json(pedidoService.listarPedidos(filtros));
 }
 
 function consultar(req, res) {

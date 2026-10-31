@@ -134,3 +134,28 @@ test('corpo JSON malformado retorna erro explicativo em JSON', async () => {
   assert.equal(response.status, 400);
   assert.equal(response.body.message, 'Corpo JSON inválido.');
 });
+
+test('GET /pedidos filtra por status e prioridade combinados', async () => {
+  const created = await request(app).post('/pedidos').send({
+    cliente: 'Filtro combinado',
+    tipo: 'entrega',
+    valor: 99,
+    prioridade: 'urgente'
+  });
+  const response = await request(app).get('/pedidos?status=recebido&prioridade=urgente');
+
+  assert.equal(created.status, 201);
+  assert.equal(response.status, 200);
+  assert.ok(response.body.some((pedido) => pedido.id === created.body.id));
+  assert.ok(response.body.every((pedido) => pedido.status === 'recebido' && pedido.prioridade === 'urgente'));
+});
+
+test('GET /pedidos rejeita filtros desconhecidos com HTTP 400', async () => {
+  const invalidStatus = await request(app).get('/pedidos?status=desconhecido');
+  const invalidPriority = await request(app).get('/pedidos?prioridade=baixa');
+
+  assert.equal(invalidStatus.status, 400);
+  assert.match(invalidStatus.body.message, /status inválido/);
+  assert.equal(invalidPriority.status, 400);
+  assert.match(invalidPriority.body.message, /prioridade inválida/);
+});

@@ -61,8 +61,33 @@ function validarTransicaoStatus(statusAtual, proximoStatus) {
   return null;
 }
 
-function listarPedidos() {
-  return pedidos;
+function validarFiltrosLista(filtros) {
+  if (filtros.status !== undefined && (
+    typeof filtros.status !== 'string'
+    || !STATUS_VALIDOS.includes(filtros.status.trim().toLowerCase())
+  )) {
+    return `status inválido. Valores permitidos: ${STATUS_VALIDOS.join(', ')}.`;
+  }
+
+  if (filtros.prioridade !== undefined && (
+    typeof filtros.prioridade !== 'string'
+    || !PRIORIDADES_VALIDAS.includes(filtros.prioridade.trim().toLowerCase())
+  )) {
+    return 'prioridade inválida. Valores permitidos: normal, alta ou urgente.';
+  }
+
+  return null;
+}
+
+function listarPedidos(filtros = {}) {
+  return pedidos.filter((pedido) => {
+    const statusCorresponde = filtros.status === undefined
+      || pedido.status === filtros.status.trim().toLowerCase();
+    const prioridadeCorresponde = filtros.prioridade === undefined
+      || pedido.prioridade === filtros.prioridade.trim().toLowerCase();
+
+    return statusCorresponde && prioridadeCorresponde;
+  });
 }
 
 function buscarPedidoPorId(id) {
@@ -102,6 +127,7 @@ module.exports = {
   validarNovoPedido,
   validarStatus,
   validarTransicaoStatus,
+  validarFiltrosLista,
   listarPedidos,
   buscarPedidoPorId,
   criarPedido,

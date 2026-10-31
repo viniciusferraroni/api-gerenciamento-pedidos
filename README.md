@@ -21,7 +21,7 @@ A API fica disponível em `http://localhost:3000`. Para verificar se está ativa
 | Método | Rota | Resultado |
 |---|---|---|
 | POST | `/pedidos` | Cadastra um pedido e responde `201`. |
-| GET | `/pedidos` | Lista os pedidos e responde `200`. |
+| GET | `/pedidos` | Lista os pedidos e aceita filtros opcionais por status e prioridade. |
 | GET | `/pedidos/:id` | Consulta um pedido; responde `404` se o ID não existir. |
 | PATCH | `/pedidos/:id/status` | Atualiza o status; responde `404` se o pedido não existir. |
 | GET | `/health` | Verifica se a API está ativa. |
@@ -43,12 +43,15 @@ A API fica disponível em `http://localhost:3000`. Para verificar se está ativa
 
 O pedido criado recebe um identificador e começa com status `recebido`.
 
-### Consultar pedidos
+### Listar e consultar pedidos
 
-- `GET /pedidos` retorna uma lista JSON.
+- `GET /pedidos` retorna todos os pedidos em uma lista JSON.
+- `GET /pedidos?status=recebido` filtra pelo status.
+- `GET /pedidos?prioridade=urgente` filtra pela prioridade.
+- `GET /pedidos?status=recebido&prioridade=urgente` combina os dois filtros.
 - `GET /pedidos/1` retorna o pedido de ID `1`.
 
-IDs inexistentes ou malformados respondem `404` com uma mensagem JSON explicativa.
+Os filtros aceitam apenas os valores documentados para status e prioridade; valores desconhecidos respondem `400` com uma mensagem JSON. IDs inexistentes ou malformados respondem `404` com uma mensagem JSON explicativa.
 
 ### Atualizar status
 
