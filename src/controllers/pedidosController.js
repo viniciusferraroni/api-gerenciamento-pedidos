@@ -35,7 +35,9 @@ async function atualizarStatusPedido(req, res, next) {
   try {
     const pedido = await pedidosService.atualizarStatusPedido(
       req.params.id,
-      req.body.status,
+      req.body && typeof req.body === 'object' && !Array.isArray(req.body)
+        ? req.body.status
+        : undefined,
     );
     if (!pedido) {
       return res.status(404).json({ mensagem: 'Pedido não encontrado.' });
