@@ -1,0 +1,230 @@
+{
+  "info": {
+    "_postman_id": "51ddf922-36c8-4ea6-9ef8-bc1cb43af83e",
+    "name": "API de Gerenciamento de Pedidos",
+    "description": "Requisições manuais para os endpoints obrigatórios e validações da API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "pedidoId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Criar pedido válido (201)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cliente\": \"Carlos Dias Jesus\",\n  \"tipo\": \"entrega\",\n  \"valor\": 150,\n  \"prioridade\": \"normal\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/pedidos"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Responde 201 e retorna o pedido criado', function () {",
+              "  pm.response.to.have.status(201);",
+              "  const pedido = pm.response.json();",
+              "  pm.expect(pedido).to.have.property('id');",
+              "  pm.expect(pedido.status).to.eql('recebido');",
+              "  pm.collectionVariables.set('pedidoId', pedido.id);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rejeitar pedido inválido (400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cliente\": \"   \",\n  \"tipo\": \"entrega\",\n  \"valor\": 0,\n  \"prioridade\": \"normal\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/pedidos"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Responde 400 com mensagem JSON', function () {",
+              "  pm.response.to.have.status(400);",
+              "  pm.expect(pm.response.json().message).to.be.a('string');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Listar pedidos (200)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/pedidos"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Responde 200 com uma lista', function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json()).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Consultar pedido criado (200)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/pedidos/{{pedidoId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Responde 200 com o pedido esperado', function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get('pedidoId')));",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Consultar pedido inexistente (404)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/pedidos/999999"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Responde 404 com mensagem explicativa', function () {",
+              "  pm.response.to.have.status(404);",
+              "  pm.expect(pm.response.json().message).to.be.a('string');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Atualizar status para em_preparacao (200)",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"em_preparacao\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/pedidos/{{pedidoId}}/status"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Responde 200 e atualiza o status', function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json().status).to.eql('em_preparacao');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Atualizar status para enviado (200)",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"enviado\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/pedidos/{{pedidoId}}/status"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Responde 200 e atualiza o status', function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json().status).to.eql('enviado');",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

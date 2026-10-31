@@ -1,32 +1,34 @@
 # API de Gerenciamento de Pedidos
 
-API REST em Node.js + Express para cadastro, listagem, consulta e atualização de status de pedidos.
+API REST em Node.js e Express para cadastrar, listar, consultar e atualizar pedidos de uma loja pequena. Os dados ficam em memória e são reiniciados quando o servidor para.
 
 ## Requisitos
 
 - Node.js 18 ou superior
 - npm
 
-## Instalação
+## Instalação e execução
 
 ```bash
-npm install
-```
-
-## Execução
-
-```bash
+npm ci
 npm start
 ```
 
-A API ficará disponível em `http://localhost:3000`.
+A API fica disponível em `http://localhost:3000`. Para verificar se está ativa, acesse `GET /health`.
 
 ## Rotas
 
-### POST /pedidos
-Cria um novo pedido.
+| Método | Rota | Resultado |
+|---|---|---|
+| POST | `/pedidos` | Cadastra um pedido e responde `201`. |
+| GET | `/pedidos` | Lista os pedidos e responde `200`. |
+| GET | `/pedidos/:id` | Consulta um pedido; responde `404` se o ID não existir. |
+| PATCH | `/pedidos/:id/status` | Atualiza o status; responde `404` se o pedido não existir. |
+| GET | `/health` | Verifica se a API está ativa. |
 
-Exemplo de corpo:
+### Criar um pedido
+
+`POST /pedidos`
 
 ```json
 {
@@ -37,48 +39,45 @@ Exemplo de corpo:
 }
 ```
 
-### GET /pedidos
-Lista todos os pedidos cadastrados.
+`cliente` não pode ser vazio. `tipo` deve ser `entrega` ou `retirada`; `prioridade` deve ser `normal`, `alta` ou `urgente`; e `valor` deve ser um número finito maior que zero. Os campos textuais reconhecidos são normalizados removendo espaços externos e usando letras minúsculas nos campos enumerados.
 
-### GET /pedidos/:id
-Retorna um pedido pelo identificador.
+O pedido criado recebe um identificador e começa com status `recebido`.
 
-### PATCH /pedidos/:id/status
-Atualiza o status do pedido.
+### Consultar pedidos
 
-Exemplo:
+- `GET /pedidos` retorna uma lista JSON.
+- `GET /pedidos/1` retorna o pedido de ID `1`.
+
+IDs inexistentes ou malformados respondem `404` com uma mensagem JSON explicativa.
+
+### Atualizar status
+
+`PATCH /pedidos/:id/status`
 
 ```json
 {
-  "status": "cancelado"
+  "status": "em_preparacao"
 }
 ```
 
-### GET /health
-Verifica se a API está ativa.
-
-## Validações
-
-- `cliente` é obrigatório.
-- `tipo` é obrigatório.
-- `valor` deve ser numérico e maior que zero.
-- `prioridade` aceita: `normal`, `alta` ou `urgente`.
-- `status` aceita: `recebido`, `em_preparacao`, `enviado`, `entregue` ou `cancelado`.
-
-## Estrutura do projeto
+Os status reconhecidos e as transições permitidas são:
 
 ```text
-projeto-pedidos-api/
-├── src/
-│   ├── app.js
-│   └── server.js
-├── tests/
-│   └── pedidos-api.test.js
-├── .gitignore
-├── package.json
-├── README.md
-└── package-lock.json
+recebido -> em_preparacao ou cancelado
+em_preparacao -> enviado ou cancelado
+enviado -> entregue
+entregue -> nenhum próximo status
+cancelado -> nenhum próximo status
 ```
+
+Transições inválidas respondem `400`; um pedido entregue ou cancelado é um estado final.
+
+## Validações e erros
+
+- Dados inválidos respondem `400` com JSON no formato `{ "message": "..." }`.
+- JSON malformado também responde `400` com uma mensagem JSON explicativa.
+- IDs inexistentes respondem `404`.
+- Erros inesperados são registrados no servidor e respondem `500` sem expor detalhes internos.
 
 ## Testes
 
@@ -86,8 +85,44 @@ projeto-pedidos-api/
 npm test
 ```
 
-## Observações
+A suíte automatizada cobre as rotas, validações, erros de entrada, consulta por ID e fluxo de atualização do status.
 
-- Os dados são armazenados em memória durante a execução da API.
-- Não há uso de banco de dados, senhas, tokens ou variáveis de ambiente.
-- O projeto foi implementado seguindo um padrão simples de API REST com validações básicas e testes automatizados.
+## Testes manuais com Postman
+
+Importe [`postman/api-pedidos.postman_collection.json`](./postman/api-pedidos.postman_collection.json) no Postman e execute as requisições na ordem da coleção. A variável `baseUrl` usa `http://localhost:3000` por padrão; o ID retornado pela criação é salvo automaticamente como `pedidoId`.
+
+Para as evidências do trabalho, salve capturas reais das requisições e respostas em uma pasta `evidencias/`, incluindo método, URL, corpo quando aplicável, status HTTP e resposta. Sugestões de nomes:
+
+- `01-criacao.png`
+- `02-validacao.png`
+- `03-listagem.png`
+- `04-consulta-inexistente.png`
+- `05-atualizacao.png`
+
+As capturas devem ser feitas após executar a API e as requisições no Postman; elas não são geradas automaticamente pela coleção.
+
+## Arquitetura
+
+```text
+src/
+├── app.js
+├── server.js
+├── controllers/
+│   └── pedidoController.js
+├── routes/
+│   └── pedidoRoutes.js
+└── services/
+    └── pedidoService.js
+tests/
+└── pedidos-api.test.js
+postman/
+└── api-pedidos.postman_collection.json
+```
+
+As rotas encaminham as requisições aos controllers, que cuidam das respostas HTTP. O service concentra validações e operações sobre pedidos. O servidor só inicia quando `src/server.js` é executado, permitindo que os testes importem o app sem abrir uma porta.
+
+## Uso de inteligência artificial
+
+GitHub Copilot foi usado como apoio para estruturar a implementação, revisar validações e ampliar os testes. A sugestão de separar rotas, controllers e services foi aceita para explicitar as responsabilidades. Como o enunciado não define o fluxo de status, foi adotada uma sequência conservadora, documentada acima e coberta por testes; pedidos entregues ou cancelados não podem voltar a um estado anterior.
+
+O aluno continua responsável por compreender, executar e explicar as decisões e o código entregue.
