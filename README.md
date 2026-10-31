@@ -30,7 +30,7 @@ Exemplo de corpo:
 
 ```json
 {
-  "cliente": "Carlos Silva",
+  "cliente": "Lucas Samuel",
   "tipo": "entrega",
   "valor": 150,
   "prioridade": "normal"
