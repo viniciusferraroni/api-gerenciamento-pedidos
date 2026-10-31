@@ -1,14 +1,20 @@
-class FuncionalidadeNaoImplementadaError extends Error {
-  constructor() {
-    super('Esta funcionalidade ainda não foi implementada.');
-    this.name = 'FuncionalidadeNaoImplementadaError';
-    this.statusCode = 501;
-  }
-}
-
 const pedidos = [];
 const TIPOS_VALIDOS = ['entrega', 'retirada'];
 const PRIORIDADES_VALIDAS = ['normal', 'alta', 'urgente'];
+const STATUS_VALIDOS = [
+  'recebido',
+  'em_preparacao',
+  'enviado',
+  'entregue',
+  'cancelado',
+];
+const TRANSICOES_PERMITIDAS = {
+  recebido: ['em_preparacao', 'cancelado'],
+  em_preparacao: ['enviado', 'cancelado'],
+  enviado: ['entregue'],
+  entregue: [],
+  cancelado: [],
+};
 let proximoId = 1;
 
 function criarErroValidacao(mensagem) {
@@ -65,18 +71,41 @@ async function criarPedido(dadosPedido) {
 }
 
 async function listarPedidos() {
-  throw new FuncionalidadeNaoImplementadaError();
+  return pedidos;
 }
 
 async function buscarPedidoPorId(id) {
-  void id;
-  throw new FuncionalidadeNaoImplementadaError();
+  const idNumerico = Number(id);
+  if (!Number.isSafeInteger(idNumerico) || idNumerico <= 0) {
+    return null;
+  }
+
+  return pedidos.find((pedido) => pedido.id === idNumerico) || null;
 }
 
 async function atualizarStatusPedido(id, status) {
-  void id;
-  void status;
-  throw new FuncionalidadeNaoImplementadaError();
+  const pedido = await buscarPedidoPorId(id);
+  if (!pedido) {
+    return null;
+  }
+
+  if (typeof status !== 'string') {
+    throw criarErroValidacao(`status deve ser um dos valores: ${STATUS_VALIDOS.join(', ')}.`);
+  }
+
+  const statusNormalizado = status.trim().toLowerCase();
+  if (!STATUS_VALIDOS.includes(statusNormalizado)) {
+    throw criarErroValidacao(`status deve ser um dos valores: ${STATUS_VALIDOS.join(', ')}.`);
+  }
+
+  if (!TRANSICOES_PERMITIDAS[pedido.status].includes(statusNormalizado)) {
+    throw criarErroValidacao(
+      `Não é permitida a transição de ${pedido.status} para ${statusNormalizado}.`,
+    );
+  }
+
+  pedido.status = statusNormalizado;
+  return pedido;
 }
 
 module.exports = {

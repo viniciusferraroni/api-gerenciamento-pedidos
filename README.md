@@ -17,9 +17,9 @@ pela variável de ambiente `PORT`.
 | Método | Caminho | Responsabilidade |
 | --- | --- | --- |
 | `POST` | `/pedidos` | Cadastrar um pedido válido (HTTP 201) |
-| `GET` | `/pedidos` | Encaminhar a listagem de pedidos |
-| `GET` | `/pedidos/:id` | Encaminhar a consulta de um pedido |
-| `PATCH` | `/pedidos/:id/status` | Encaminhar a atualização de status |
+| `GET` | `/pedidos` | Listar os pedidos cadastrados (HTTP 200) |
+| `GET` | `/pedidos/:id` | Consultar um pedido (HTTP 200 ou 404) |
+| `PATCH` | `/pedidos/:id/status` | Atualizar o status (HTTP 200, 400 ou 404) |
 
 ### Cadastrar pedido
 
@@ -43,14 +43,49 @@ espaços externos. O pedido criado recebe um identificador sequencial e começa
 com status `recebido`.
 
 Dados inválidos respondem HTTP 400 com JSON no formato
-`{ "mensagem": "..." }`. Os demais métodos do service ainda respondem HTTP 501
-até serem implementados.
+`{ "mensagem": "..." }`. Erros inesperados respondem HTTP 500 sem expor detalhes
+internos.
+
+### Consultar e atualizar pedidos
+
+`GET /pedidos` responde com uma lista JSON, vazia quando não há pedidos.
+`GET /pedidos/:id` responde com o pedido encontrado ou HTTP 404 quando o
+identificador não existe.
+
+`PATCH /pedidos/:id/status` recebe o novo status, por exemplo:
+
+```json
+{
+  "status": "em_preparacao"
+}
+```
+
+Os status aceitos são `recebido`, `em_preparacao`, `enviado`, `entregue` e
+`cancelado`. Espaços externos e diferenças entre maiúsculas e minúsculas são
+normalizados como no tipo e na prioridade. Transições permitidas:
+
+| Status atual | Próximos status permitidos |
+| --- | --- |
+| `recebido` | `em_preparacao`, `cancelado` |
+| `em_preparacao` | `enviado`, `cancelado` |
+| `enviado` | `entregue` |
+| `entregue` | Nenhum (estado final) |
+| `cancelado` | Nenhum (estado final) |
+
+Status inválido ou transição não permitida respondem HTTP 400. Um identificador
+inexistente responde HTTP 404.
 
 ## Testes
 
-Execute `npm test` para verificar o cadastro, as normalizações e as validações.
+Execute `npm test` para verificar o cadastro, as normalizações, as validações,
+a listagem, a consulta, as transições de status e o tratamento de erros.
+Rotas inexistentes e erros são respondidos em JSON.
 
-Os métodos de listagem, consulta e atualização ainda são stubs. Quando
-implementados, a consulta e a atualização devem retornar `null` quando o
-pedido não existir, permitindo ao controller responder HTTP 404. O middleware
-da aplicação responde em JSON para rotas inexistentes e erros.
+## Uso de IA
+
+Foi utilizado o Copilot como apoio para implementar a listagem, a consulta por
+identificador e a atualização de status, além de criar testes e documentar as
+transições. Foi aceita e adaptada a sugestão de permitir cancelamento antes do
+envio e tratar pedidos entregues ou cancelados como estados finais. A
+implementação e seus testes foram revisados neste projeto; quem entrega o
+trabalho permanece responsável por compreender, validar e justificar o código.
