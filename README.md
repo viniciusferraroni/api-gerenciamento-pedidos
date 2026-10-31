@@ -88,21 +88,19 @@ Transições inválidas respondem `400`; um pedido entregue ou cancelado é um e
 npm test
 ```
 
-A suíte automatizada cobre as rotas, validações, erros de entrada, consulta por ID e fluxo de atualização do status.
+Os testes automatizados são executados com Jest e cobrem as rotas, validações, erros de entrada, consulta por ID e fluxo de atualização do status. O modo serial é usado porque os pedidos são mantidos em memória durante a execução dos testes.
 
 ## Testes manuais com Postman
 
 Importe [`postman/api-pedidos.postman_collection.json`](./postman/api-pedidos.postman_collection.json) no Postman e execute as requisições na ordem da coleção. A variável `baseUrl` usa `http://localhost:3000` por padrão; o ID retornado pela criação é salvo automaticamente como `pedidoId`.
 
-Para as evidências do trabalho, salve capturas reais das requisições e respostas em uma pasta `evidencias/`, incluindo método, URL, corpo quando aplicável, status HTTP e resposta. Sugestões de nomes:
+Esta coleção também pode ser executada com Newman, o executor de coleções do Postman:
 
-- `01-criacao.png`
-- `02-validacao.png`
-- `03-listagem.png`
-- `04-consulta-inexistente.png`
-- `05-atualizacao.png`
+```bash
+npx --yes newman run ./postman/api-pedidos.postman_collection.json
+```
 
-As capturas devem ser feitas após executar a API e as requisições no Postman; elas não são geradas automaticamente pela coleção.
+As capturas e relatórios desta execução estão em [`evidencias/`](./evidencias/). Os PNGs foram capturados do relatório HTML real do Newman e mostram método, URL, corpo, status e resposta de cada cenário; não são capturas da interface do Postman Desktop. O relatório HTML e o JSON registram a execução completa da coleção. Para entregar capturas especificamente da interface do Postman, importe a coleção no Postman Desktop e faça as capturas por lá.
 
 ## Arquitetura
 
