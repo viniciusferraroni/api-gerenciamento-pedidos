@@ -1,21 +1,23 @@
 {
-  "name": "projeto-pedidos-api",
+  "name": "api-gerenciamento-de-pedidos",
   "version": "1.0.0",
+  "private": true,
   "description": "API REST para gerenciamento de pedidos",
-  "main": "src/server.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node src/server.js",
-    "test": "jest --runInBand"
+    "start": "node server.js",
+    "test": "jest --runInBand",
+    "evidencias": "node scripts/gerar-evidencias.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "dependencies": {
-    "express": "^5.3.0",
-    "supertest": "^7.3.1"
+  "engines": {
+    "node": ">=18"
   },
   "devDependencies": {
-    "jest": "^30.5.2"
+    "jest": "^30.5.2",
+    "newman": "^6.2.3",
+    "supertest": "^7.3.1"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
   }
 }

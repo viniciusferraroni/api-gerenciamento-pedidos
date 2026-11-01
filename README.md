@@ -1,61 +1,57 @@
 # API de Gerenciamento de Pedidos
 
-API REST em Node.js e Express para cadastrar, listar, consultar e atualizar pedidos de uma loja pequena. Os dados ficam em memória e são reiniciados quando o servidor para.
+API REST em Node.js e Express para cadastrar, listar, consultar e atualizar pedidos. A aplicação usa uma arquitetura em camadas e mantém os dados em memória; os pedidos são perdidos quando o processo é encerrado.
 
 ## Requisitos
 
 - Node.js 18 ou superior
 - npm
+- Microsoft Edge para gerar capturas PNG das evidências Newman
 
 ## Instalação e execução
+
+Na raiz do projeto, instale as dependências e inicie a API:
 
 ```bash
 npm ci
 npm start
 ```
 
-A API fica disponível em `http://localhost:3000`. Para verificar se está ativa, acesse `GET /health`.
+O servidor fica disponível em `http://localhost:3000`. A porta padrão pode ser alterada pela variável de ambiente `PORT`. Para encerrar, use `Ctrl+C`.
 
 ## Rotas
 
-| Método | Rota | Resultado |
-|---|---|---|
-| POST | `/pedidos` | Cadastra um pedido e responde `201`. |
-| GET | `/pedidos` | Lista os pedidos e aceita filtros opcionais por status e prioridade. |
-| GET | `/pedidos/:id` | Consulta um pedido; responde `404` se o ID não existir. |
-| PATCH | `/pedidos/:id/status` | Atualiza o status; responde `404` se o pedido não existir. |
-| GET | `/health` | Verifica se a API está ativa. |
+| Método | Caminho | Sucesso | Descrição |
+| --- | --- | --- | --- |
+| `POST` | `/pedidos` | `201 Created` | Cadastra um pedido. |
+| `GET` | `/pedidos` | `200 OK` | Lista os pedidos cadastrados. |
+| `GET` | `/pedidos/:id` | `200 OK` | Consulta um pedido pelo identificador; se não existir, responde `404`. |
+| `PATCH` | `/pedidos/:id/status` | `200 OK` | Atualiza o status; dados ou transições inválidos respondem `400`, e pedido inexistente responde `404`. |
 
-### Criar um pedido
+### Cadastrar um pedido
 
-`POST /pedidos`
+Envie `POST http://localhost:3000/pedidos` com `Content-Type: application/json`:
 
 ```json
 {
-  "cliente": "Carlos Dias Jesus",
+  "cliente": "Ana Souza",
   "tipo": "entrega",
-  "valor": 150,
+  "valor": 35,
   "prioridade": "normal"
 }
 ```
 
-`cliente` não pode ser vazio. `tipo` deve ser `entrega` ou `retirada`; `prioridade` deve ser `normal`, `alta` ou `urgente`; e `valor` deve ser um número finito maior que zero. Os campos textuais reconhecidos são normalizados removendo espaços externos e usando letras minúsculas nos campos enumerados.
-
-O pedido criado recebe um identificador e começa com status `recebido`.
+O pedido criado recebe um `id` sequencial e começa com status `recebido`. `cliente` deve ser texto não vazio; espaços nas extremidades são removidos. `valor` deve ser um número finito maior que zero. Os valores aceitos para `tipo` são `entrega` e `retirada`; para `prioridade`, `normal`, `alta` e `urgente`. Tipo e prioridade ignoram espaços externos e diferenças entre maiúsculas e minúsculas, e são armazenados em letras minúsculas.
 
 ### Listar e consultar pedidos
 
-- `GET /pedidos` retorna todos os pedidos em uma lista JSON.
-- `GET /pedidos?status=recebido` filtra pelo status.
-- `GET /pedidos?prioridade=urgente` filtra pela prioridade.
-- `GET /pedidos?status=recebido&prioridade=urgente` combina os dois filtros.
-- `GET /pedidos/1` retorna o pedido de ID `1`.
-
-Os filtros aceitam apenas os valores documentados para status e prioridade; valores desconhecidos respondem `400` com uma mensagem JSON. IDs inexistentes ou malformados respondem `404` com uma mensagem JSON explicativa.
+- `GET http://localhost:3000/pedidos` retorna uma lista JSON, vazia quando não há pedidos.
+- `GET http://localhost:3000/pedidos/1` consulta o pedido de identificador `1`.
+- Um identificador sem pedido correspondente responde `404 Not Found`.
 
 ### Atualizar status
 
-`PATCH /pedidos/:id/status`
+Envie `PATCH http://localhost:3000/pedidos/1/status`:
 
 ```json
 {
@@ -63,65 +59,88 @@ Os filtros aceitam apenas os valores documentados para status e prioridade; valo
 }
 ```
 
-Os status reconhecidos e as transições permitidas são:
+Os status aceitos e as transições implementadas são:
 
-```text
-recebido -> em_preparacao ou cancelado
-em_preparacao -> enviado ou cancelado
-enviado -> entregue
-entregue -> nenhum próximo status
-cancelado -> nenhum próximo status
-```
+| Status atual | Próximos status permitidos |
+| --- | --- |
+| `recebido` | `em_preparacao`, `cancelado` |
+| `em_preparacao` | `enviado`, `cancelado` |
+| `enviado` | `entregue` |
+| `entregue` | Nenhum (estado final) |
+| `cancelado` | Nenhum (estado final) |
 
-Transições inválidas respondem `400`; um pedido entregue ou cancelado é um estado final.
+Espaços externos e diferenças entre maiúsculas e minúsculas são normalizados. Status inválido ou transição não permitida responde `400 Bad Request`.
 
 ## Validações e erros
 
-- Dados inválidos respondem `400` com JSON no formato `{ "message": "..." }`.
-- JSON malformado também responde `400` com uma mensagem JSON explicativa.
-- IDs inexistentes respondem `404`.
-- Erros inesperados são registrados no servidor e respondem `500` sem expor detalhes internos.
+- Dados inválidos e JSON malformado respondem `400 Bad Request`.
+- Pedido ou rota inexistente responde `404 Not Found`.
+- Erros são enviados em JSON no formato `{ "mensagem": "..." }`.
+- Erros inesperados são registrados no servidor e respondem `500 Internal Server Error`, sem expor detalhes internos.
 
-## Testes
+## Arquitetura
+
+```text
+.
+├── server.js
+├── src/
+│   ├── app.js
+│   ├── routes/
+│   │   └── pedidosRoutes.js
+│   ├── controllers/
+│   │   └── pedidosController.js
+│   └── services/
+│       └── pedidosService.js
+├── postman/
+│   └── api-pedidos.postman_collection.json
+├── scripts/
+│   └── gerar-evidencias.js
+├── tests/
+│   └── pedidos.test.js
+└── evidencias/
+    └── *.png
+```
+
+`server.js` inicia o servidor. `src/app.js` configura o Express e o tratamento de erros. As rotas encaminham as requisições aos controllers, que convertem os resultados em respostas HTTP; o service concentra as validações, regras de transição e operações sobre pedidos.
+
+## Testes automatizados
+
+Execute a suíte com Jest:
 
 ```bash
 npm test
 ```
 
-Os testes automatizados são executados com Jest e cobrem as rotas, validações, erros de entrada, consulta por ID e fluxo de atualização do status. O modo serial é usado porque os pedidos são mantidos em memória durante a execução dos testes.
+Os testes exercitam os endpoints, validações e normalizações do cadastro, consulta e listagem, transições válidas e inválidas, erros JSON e respostas para recursos inexistentes ou falhas internas. A execução serial evita concorrência sobre o armazenamento em memória.
 
-## Testes manuais com Postman
+## Evidências de execução com Newman
 
-Importe [`postman/api-pedidos.postman_collection.json`](./postman/api-pedidos.postman_collection.json) no Postman e execute as requisições na ordem da coleção. A variável `baseUrl` usa `http://localhost:3000` por padrão; o ID retornado pela criação é salvo automaticamente como `pedidoId`.
+Não foi possível obter capturas pela interface do Postman: o aplicativo Desktop não pôde ser baixado neste ambiente e o Postman Web exigiu um login que não foi concluído. Por isso, os PNGs são capturas de relatórios gerados com os dados reais de requisição e resposta da execução do Newman, renderizados pelo Microsoft Edge em modo headless; não são imagens das interfaces do Postman ou do Newman.
 
-Esta coleção também pode ser executada com Newman, o executor de coleções do Postman:
+Com a API em execução e o Microsoft Edge instalado, abra outro terminal na raiz do projeto e execute:
 
 ```bash
-npx --yes newman run ./postman/api-pedidos.postman_collection.json
+npm run evidencias
 ```
 
-As capturas e relatórios desta execução estão em [`evidencias/`](./evidencias/). Os PNGs foram capturados do relatório HTML real do Newman e mostram método, URL, corpo, status e resposta de cada cenário; não são capturas da interface do Postman Desktop. O relatório HTML e o JSON registram a execução completa da coleção. Para entregar capturas especificamente da interface do Postman, importe a coleção no Postman Desktop e faça as capturas por lá.
+O comando executa a coleção [`postman/api-pedidos.postman_collection.json`](./postman/api-pedidos.postman_collection.json) contra a API e gera PNGs em `evidencias/`. Para usar outra URL base, defina `API_BASE_URL` antes do comando. No PowerShell:
 
-## Arquitetura
-
-```text
-src/
-├── app.js
-├── server.js
-├── controllers/
-│   └── pedidoController.js
-├── routes/
-│   └── pedidoRoutes.js
-└── services/
-    └── pedidoService.js
-tests/
-└── pedidos-api.test.js
-postman/
-└── api-pedidos.postman_collection.json
+```powershell
+$env:API_BASE_URL = "http://localhost:3000"
+npm run evidencias
 ```
 
-As rotas encaminham as requisições aos controllers, que cuidam das respostas HTTP. O service concentra validações e operações sobre pedidos. O servidor só inicia quando `src/server.js` é executado, permitindo que os testes importem o app sem abrir uma porta.
+As capturas mostram o método, a URL, o corpo enviado quando aplicável, a resposta real e o código HTTP. A coleção cobre criação válida (`201`), validação inválida (`400`), listagem (`200`), pedido inexistente (`404`) e atualização de status (`200`). O identificador usado na atualização é obtido da resposta real de criação. Não são usados resultados simulados. A execução gera `01-cadastrar-pedido-valido-201.png`, `02-rejeitar-pedido-invalido-400.png`, `03-listar-pedidos-200.png`, `04-consultar-pedido-inexistente-404.png` e `05-atualizar-status-do-pedido-criado-200.png` dentro de `evidencias/`.
 
-## Uso de inteligência artificial
+## Entrega individual
 
-Foi usado GitCopilot para auxiliar no desenvolvimento do projeto, além das operações de commit e push.
+O enunciado solicita pelo menos cinco commits significativos por integrante. Cada pessoa deve registrar suas próprias contribuições com a própria conta e entregar o link do seu repositório junto com o RA. Não conte commits inventados nem commits feitos por outra pessoa.
+
+## Uso de IA
+
+O grupo deve registrar somente o uso real de ferramentas de IA, identificando a ferramenta, a tarefa apoiada e ao menos uma sugestão aceita, modificada ou rejeitada, com a justificativa. Cada integrante deve confirmar e completar sua própria contribuição; esta seção não presume usos anteriores de outras pessoas.
+
+| Etapa | Ferramenta usada | Tarefa apoiada | Sugestão e decisão, com justificativa |
+| --- | --- | --- | --- |
+| Pessoa 4 (esta etapa) | Assistente Copilot | Atualização da documentação, suíte Jest/Supertest, coleção Newman e geração das capturas a partir de respostas reais. | Sugestão aceita: testar o app Express exportado com Supertest sem abrir um servidor manualmente e usar Newman para executar a coleção e registrar respostas reais, já que o Postman não pôde ser acessado neste ambiente. |
+| Demais integrantes | Preencher com a ferramenta realmente usada ou informar que não houve uso. | Registrar a tarefa real apoiada. | Registrar uma sugestão real, a decisão tomada e a justificativa. |

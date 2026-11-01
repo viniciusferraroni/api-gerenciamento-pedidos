@@ -1,29 +1,33 @@
 const express = require('express');
-const pedidoRoutes = require('./routes/pedidoRoutes');
+const pedidosRoutes = require('./routes/pedidosRoutes');
 
 const app = express();
+
 app.use(express.json());
+app.use('/pedidos', pedidosRoutes);
 
-const STATUS_VALIDOS = ['recebido', 'em_preparacao', 'enviado', 'entregue', 'cancelado'];
-const PRIORIDADE_VALIDAS = ['normal', 'alta', 'urgente'];
-
-app.get('/health', (req, res) => {
-  res.status(200).json({ ok: true, message: 'API funcionando corretamente.' });
+app.use((req, res) => {
+  res.status(404).json({ mensagem: 'Rota não encontrada.' });
 });
-
-app.use('/pedidos', pedidoRoutes);
 
 app.use((error, req, res, next) => {
   if (res.headersSent) {
     return next(error);
   }
 
-  if (error.type === 'entity.parse.failed') {
-    return res.status(400).json({ message: 'Corpo JSON inválido.' });
+  const isInvalidJson = error.type === 'entity.parse.failed';
+  const hasErrorStatus = Number.isInteger(error.statusCode)
+    && error.statusCode >= 400
+    && error.statusCode < 600;
+  const statusCode = isInvalidJson ? 400 : hasErrorStatus ? error.statusCode : 500;
+
+  if (statusCode === 500) {
+    console.error(error);
   }
 
-  console.error(error);
-  return res.status(500).json({ message: 'Erro interno do servidor.' });
+  return res.status(statusCode).json({
+    mensagem: statusCode === 500 ? 'Erro interno do servidor.' : error.message,
+  });
 });
 
 module.exports = app;

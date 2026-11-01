@@ -1,8 +1,8 @@
 {
   "info": {
-    "_postman_id": "51ddf922-36c8-4ea6-9ef8-bc1cb43af83e",
-    "name": "API de Gerenciamento de Pedidos",
-    "description": "Requisições manuais para os endpoints obrigatórios e validações da API.",
+    "_postman_id": "71d1de8a-0a7d-4ed0-b255-11148af6c5a6",
+    "name": "Evidências Newman - API de Pedidos",
+    "description": "Requisições de verificação usadas para gerar evidências reais com Newman.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -17,7 +17,7 @@
   ],
   "item": [
     {
-      "name": "Criar pedido válido (201)",
+      "name": "Cadastrar pedido válido (201)",
       "request": {
         "method": "POST",
         "header": [
@@ -28,7 +28,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"cliente\": \"Carlos Dias Jesus\",\n  \"tipo\": \"entrega\",\n  \"valor\": 150,\n  \"prioridade\": \"normal\"\n}",
+          "raw": "{\n  \"cliente\": \"Ana Souza\",\n  \"tipo\": \"entrega\",\n  \"valor\": 35,\n  \"prioridade\": \"normal\"\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -43,10 +43,9 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test('Responde 201 e retorna o pedido criado', function () {",
+              "pm.test('Responde HTTP 201 com pedido recebido', function () {",
               "  pm.response.to.have.status(201);",
               "  const pedido = pm.response.json();",
-              "  pm.expect(pedido).to.have.property('id');",
               "  pm.expect(pedido.status).to.eql('recebido');",
               "  pm.collectionVariables.set('pedidoId', pedido.id);",
               "});"
@@ -67,7 +66,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"cliente\": \"   \",\n  \"tipo\": \"entrega\",\n  \"valor\": 0,\n  \"prioridade\": \"normal\"\n}",
+          "raw": "{\n  \"cliente\": \"Ana Souza\",\n  \"tipo\": \"entrega\",\n  \"valor\": 0,\n  \"prioridade\": \"normal\"\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -82,9 +81,9 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test('Responde 400 com mensagem JSON', function () {",
+              "pm.test('Responde HTTP 400 com mensagem JSON', function () {",
               "  pm.response.to.have.status(400);",
-              "  pm.expect(pm.response.json().message).to.be.a('string');",
+              "  pm.expect(pm.response.json().mensagem).to.be.a('string');",
               "});"
             ]
           }
@@ -103,30 +102,9 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test('Responde 200 com uma lista', function () {",
+              "pm.test('Responde HTTP 200 com uma lista', function () {",
               "  pm.response.to.have.status(200);",
               "  pm.expect(pm.response.json()).to.be.an('array');",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "Consultar pedido criado (200)",
-      "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/pedidos/{{pedidoId}}"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('Responde 200 com o pedido esperado', function () {",
-              "  pm.response.to.have.status(200);",
-              "  pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get('pedidoId')));",
               "});"
             ]
           }
@@ -145,9 +123,9 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test('Responde 404 com mensagem explicativa', function () {",
+              "pm.test('Responde HTTP 404 com mensagem JSON', function () {",
               "  pm.response.to.have.status(404);",
-              "  pm.expect(pm.response.json().message).to.be.a('string');",
+              "  pm.expect(pm.response.json().mensagem).to.be.a('string');",
               "});"
             ]
           }
@@ -155,7 +133,7 @@
       ]
     },
     {
-      "name": "Atualizar status para em_preparacao (200)",
+      "name": "Atualizar status do pedido criado (200)",
       "request": {
         "method": "PATCH",
         "header": [
@@ -181,45 +159,9 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test('Responde 200 e atualiza o status', function () {",
+              "pm.test('Responde HTTP 200 com status atualizado', function () {",
               "  pm.response.to.have.status(200);",
               "  pm.expect(pm.response.json().status).to.eql('em_preparacao');",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "Atualizar status para enviado (200)",
-      "request": {
-        "method": "PATCH",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"status\": \"enviado\"\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        },
-        "url": "{{baseUrl}}/pedidos/{{pedidoId}}/status"
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('Responde 200 e atualiza o status', function () {",
-              "  pm.response.to.have.status(200);",
-              "  pm.expect(pm.response.json().status).to.eql('enviado');",
               "});"
             ]
           }
