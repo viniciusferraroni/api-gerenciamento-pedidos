@@ -6,10 +6,16 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test"
+    "test": "jest --runInBand",
+    "evidencias": "node scripts/gerar-evidencias.js"
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "jest": "^30.5.2",
+    "newman": "^6.2.3",
+    "supertest": "^7.3.1"
   },
   "dependencies": {
     "express": "^4.21.2"

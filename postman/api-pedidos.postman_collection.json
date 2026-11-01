@@ -1,0 +1,172 @@
+{
+  "info": {
+    "_postman_id": "71d1de8a-0a7d-4ed0-b255-11148af6c5a6",
+    "name": "Evidências Newman - API de Pedidos",
+    "description": "Requisições de verificação usadas para gerar evidências reais com Newman.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "pedidoId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Cadastrar pedido válido (201)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cliente\": \"Ana Souza\",\n  \"tipo\": \"entrega\",\n  \"valor\": 35,\n  \"prioridade\": \"normal\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/pedidos"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Responde HTTP 201 com pedido recebido', function () {",
+              "  pm.response.to.have.status(201);",
+              "  const pedido = pm.response.json();",
+              "  pm.expect(pedido.status).to.eql('recebido');",
+              "  pm.collectionVariables.set('pedidoId', pedido.id);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rejeitar pedido inválido (400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cliente\": \"Ana Souza\",\n  \"tipo\": \"entrega\",\n  \"valor\": 0,\n  \"prioridade\": \"normal\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/pedidos"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Responde HTTP 400 com mensagem JSON', function () {",
+              "  pm.response.to.have.status(400);",
+              "  pm.expect(pm.response.json().mensagem).to.be.a('string');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Listar pedidos (200)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/pedidos"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Responde HTTP 200 com uma lista', function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json()).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Consultar pedido inexistente (404)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/pedidos/999999"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Responde HTTP 404 com mensagem JSON', function () {",
+              "  pm.response.to.have.status(404);",
+              "  pm.expect(pm.response.json().mensagem).to.be.a('string');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Atualizar status do pedido criado (200)",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"em_preparacao\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/pedidos/{{pedidoId}}/status"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Responde HTTP 200 com status atualizado', function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json().status).to.eql('em_preparacao');",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
